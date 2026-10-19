@@ -56,7 +56,7 @@ async function ensureSchema(db) {
 }
 
 export default async (request) => {
-  if (request.method !== 'GET' && request.method !== 'POST') {
+  if (request.method !== 'GET' && request.method !== 'POST' && request.method !== 'PUT') {
     return json({ ok: false, error: 'Método no permitido.' }, 405);
   }
   if (!authorized(request)) {
@@ -87,6 +87,27 @@ export default async (request) => {
     let body;
     try { body = await request.json(); }
     catch { return json({ ok: false, error: 'El cuerpo de la solicitud no contiene JSON válido.' }, 400); }
+
+    // PUT se reserva para editar un caso existente sin cambiar su folio.
+    if (request.method === 'PUT') {
+      const raw = body?.record;
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+        return json({ ok: false, error: 'Debes enviar un registro válido en el campo record.' }, 400);
+      }
+      const id = String(raw.id || '').trim();
+      if (!id || id.length > 200) {
+        return json({ ok: false, error: 'El registro editado debe conservar un folio (id) válido.' }, 400);
+      }
+      const record = { ...raw, id };
+      const result = await db.query(
+        'UPDATE voz_operacion_cases SET data = $2::jsonb WHERE id = $1 RETURNING id',
+        [id, JSON.stringify(record)]
+      );
+      if (!result.rowCount) {
+        return json({ ok: false, error: 'No se encontró ese folio en la base central; no se creó un registro nuevo.' }, 404);
+      }
+      return json({ ok: true, updated: true, id });
+    }
 
     const incoming = Array.isArray(body?.cases) ? body.cases : (body?.record ? [body.record] : []);
     if (!incoming.length) return json({ ok: false, error: 'No se recibieron casos para guardar.' }, 400);
@@ -131,3 +152,4 @@ export default async (request) => {
     return json({ ok: false, error: error?.message || 'Error interno al conectar con PostgreSQL.' }, 500);
   }
 };
+
