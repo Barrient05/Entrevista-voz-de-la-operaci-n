@@ -45,3 +45,7 @@ Se eliminó la selección obligatoria “¿Qué tipo de situación describe?”.
 
 
 V42.6: la captura de cantidad afectada ahora permite seleccionar un rango aproximado, registrar una cantidad exacta positiva o indicar que no se recuerda. La opción de cero piezas afectadas permanece disponible.
+
+
+ACTUALIZACIÓN V42.6.1 — CORRECCIÓN DE EDICIÓN CENTRAL
+La función netlify/functions/casos.mjs ahora admite GET, POST y PUT. PUT actualiza el registro existente por su folio (id); no inserta uno nuevo si el folio no existe. Después de reemplazar los archivos del proyecto, vuelve a desplegar en Netlify. No cambies DATABASE_URL ni VOZ_SYNC_TOKEN si ya están configuradas. Prueba editando un reporte de prueba y verificando el cambio desde otro dispositivo.
